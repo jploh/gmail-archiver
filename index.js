@@ -136,11 +136,24 @@ function getLabels(auth) {
           foundLabels.push(label);
         }
       }
-      getLabelThreads();
+      getLabelThreads(auth);
     }
   });
 }
 
-function getLabelThreads() {
-
+function getLabelThreads (auth) {
+  var gmail = google.gmail('v1');
+  _.forEach(foundLabels, function (label) {
+    gmail.users.threads.list({
+      auth: auth,
+      'userId': 'me',
+      'labelIds': label.id
+    }, function (err, response) {
+      if (err) {
+        console.log('The API returned an error: ' + err);
+        return;
+      }
+      console.log(response.threads);
+    });
+  });
 }
