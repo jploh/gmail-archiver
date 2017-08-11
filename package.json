@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/jploh/gmail-archiver#readme",
   "dependencies": {
+    "command-line-args": "^4.0.7",
     "dotenv": "^4.0.0",
     "fs-extra": "^4.0.1",
     "google-auth-library": "^0.10.0",

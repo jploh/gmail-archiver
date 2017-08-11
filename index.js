@@ -1,10 +1,27 @@
 /*jshint esversion:6 */
+const _ = require('lodash');
+const commandLineArgs = require('command-line-args');
 const dotenv = require('dotenv').config();
 const fs = require('fs-extra');
 const google = require('googleapis');
 const googleAuth = require('google-auth-library');
 const readline = require('readline');
 
+const optionDefinitions = [
+  { name: 'label', type: String, multiple: true }
+];
+const args = commandLineArgs(optionDefinitions);
+
+if (typeof args.label == 'undefined' || args.label.length == 0) {
+  console.log('No label to archive. Try running with --label Read "Sent Items"');
+  process.exit(1);
+}
+
+var labelsOpt = [],
+  foundLabels = [];
+_.forEach(args.label, function (label) {
+  labelsOpt.push(label.toLowerCase());
+});
 
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
 const TOKEN_DIR = './.config/google-auth/';
@@ -18,7 +35,7 @@ fs.readFile('./.config/google-auth/client_id.json', function processClientSecret
   }
   // Authorize a client with the loaded credentials, then call the
   // Gmail API.
-  authorize(JSON.parse(content), listLabels);
+  authorize(JSON.parse(content), getLabels);
 });
 
 /**
@@ -92,7 +109,6 @@ function storeToken(token) {
     }
   }
   fs.writeFileSync(TOKEN_PATH, JSON.stringify(token));
-  console.log('Token stored to ' + TOKEN_PATH);
 }
 
 /**
@@ -100,7 +116,7 @@ function storeToken(token) {
  *
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
-function listLabels(auth) {
+function getLabels(auth) {
   var gmail = google.gmail('v1');
   gmail.users.labels.list({
     auth: auth,
@@ -114,11 +130,17 @@ function listLabels(auth) {
     if (labels.length == 0) {
       console.log('No labels found.');
     } else {
-      console.log('Labels:');
       for (var i = 0; i < labels.length; i++) {
         var label = labels[i];
-        console.log('- %s', label.name);
+        if (_.includes(labelsOpt, label.name.toLowerCase())) {
+          foundLabels.push(label);
+        }
       }
+      getLabelThreads();
     }
   });
+}
+
+function getLabelThreads() {
+
 }
